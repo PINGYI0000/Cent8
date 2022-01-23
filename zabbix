@@ -1,0 +1,57 @@
+//ip a 看一下網路並設定成靜態
+# vi /etc/sysconfig/network-scripts/ifcfg-網卡名稱
+//把dhcp 改成 static
+//IPADDR=10.0.2.15
+//NETMASK=255.255.255.0
+//(下面 ip a 顯示出來的IP)
+//GATEWAY=10.0.2.2
+//(使用netstat -rn可看到)
+//DNS1=8.8.8.8 
+
+//先確認好主機網路、時間
+# nmcli con down enp0s3
+# nmcli con reload
+# nmcli con up enp0s3
+//(以上步驟為重新啟動網卡)
+//設定時間：
+# timedatectl
+# timedatectl set-timezone Asia/Taipei
+//先關機建一下快照(虛擬機)
+
+//安裝 Zabbix repository
+# rpm -Uvh https://repo.zabbix.com/zabbix/5.4/rhel/8/x86_64/zabbix-release-5.4-1.el8.noarch.rpm
+# dnf clean all
+//安裝Zabbix server, frontend, agent
+# dnf install zabbix-server-mysql zabbix-web-mysql zabbix-apache-conf zabbix-sql-scripts zabbix-agent
+//安裝MySQL DateBase
+# yum install mysql-server
+//確認MySQL 是否啟用
+# systemctl status mysqld
+# systemctl enable --now mysqld
+
+//設定Zabbix Server DB
+# mysql -uroot -p
+//password(預設空白 Enter 就可以了)
+mysql> create database zabbix character set utf8 collate utf8_bin;
+mysql> create user zabbix@'%' identified by 'password';
+mysql> grant all privileges on zabbix.* to zabbix@'%';
+mysql> quit;
+# vi /etc/zabbix/zabbix_server.conf
+//修改DBpassword=password (:wq存檔離開)
+# zcat /usr/share/doc/zabbix-sql-scripts/mysql/create.sql.gz | mysql -uzabbix -p zabbix
+
+//啟用防火牆(分別為http、agent、server的port)
+# firewall-cmd --add-service=http --permanent
+# firewall-cmd --add-port=10050/tcp --permanent
+# firewall-cmd --add-port=10051/tcp --permanent
+# firewall-cmd --reload
+//啟用Zabbix server、Zabbix agent、httpd
+# systemctl restart zabbix-server zabbix-agent httpd php-fpm
+# systemctl enable zabbix-server zabbix-agent httpd php-fpm
+
+//(zabbbix-serverd的IP)/zabbix進入網頁管理頁
+//configure DBconnection ，輸入剛才設定給user zabbix的密碼
+//下一步到最後成功安裝，預設帳號：Admin、密碼：zabbix
+# vi /etc/sysconfig/selinux
+//SELINUX=enforcing修改為SELINUX=disabled
+//重新開機後才會套用
