@@ -55,3 +55,15 @@ mysql> quit;
 # vi /etc/sysconfig/selinux
 //SELINUX=enforcing修改為SELINUX=disabled
 //重新開機後才會套用
+
+//在 Zabbix Server 上設定腳本（Script）
+# vim /usr/lib/zabbix/alertscripts/line_notify.sh
+#!/bin/bash
+# LINE Notify Token - Media > "Send to".
+TOKEN="$1"
+# {ALERT.SUBJECT}
+subject="$2"
+# {ALERT.MESSAGE}
+message="$3"
+curl https://notify-api.line.me/api/notify -H "Authorization: Bearer ${TOKEN}" -F "message=${message}"
+//(:wq)存檔離開
