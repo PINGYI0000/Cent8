@@ -67,3 +67,7 @@ subject="$2"
 message="$3"
 curl https://notify-api.line.me/api/notify -H "Authorization: Bearer ${TOKEN}" -F "message=${message}"
 //(:wq)存檔離開
+
+//指定 zabbix 為使用者 ，並給予可執行的權限
+# chmod 775  /usr/lib/zabbix/alertscripts/line_notify.sh
+# chown zabbix:zabbix  /usr/lib/zabbix/alertscripts/line_notify.sh
